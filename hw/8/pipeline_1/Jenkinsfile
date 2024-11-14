@@ -18,6 +18,13 @@ pipeline {
                         }
                     }
                 }
+                stage('Job 3') {
+                                    steps {
+                                        script {
+                                            displayJobInfo("Job 3")
+                                        }
+                                    }
+                }
             }
         }
     }
