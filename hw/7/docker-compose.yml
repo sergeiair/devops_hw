@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   elasticsearch:
-    image: elasticsearch:latest
+    image: elasticsearch:8.16.0
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
@@ -13,7 +13,7 @@ services:
       - elk
 
   logstash:
-    image: logstash:latest
+    image: logstash:8.16.0
     container_name: logstash
     ports:
       - "5044:5044"
@@ -23,7 +23,7 @@ services:
       - elasticsearch
 
   kibana:
-    image: kibana:latest
+    image: kibana:8.16.0
     container_name: kibana
     ports:
       - "5601:5601"
