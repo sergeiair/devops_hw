@@ -1,0 +1,36 @@
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
+        GIT_REPO_URL = 'https://github.com/sergeiair/devops_hw.git'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: "${GIT_REPO_URL}", branch: 'main'
+            }
+        }
+
+
+        stage('Run Compose') {
+            steps {
+                script {
+                    sh '''
+                    cd hw/7
+                    docker-compose -f $DOCKER_COMPOSE_FILE up -d
+                    '''
+                }
+            }
+        }
+
+    }
+
+    post {
+        always {
+            echo "God bless"
+        }
+
+}
