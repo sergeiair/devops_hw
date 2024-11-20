@@ -1,0 +1,11 @@
+
+pipeline {
+    agent { label 'Windows' }
+    stages {
+        stage('Run .bat File') {
+            steps {
+                bat 'C:\\Jenkins\\test.bat'
+            }
+        }
+    }
+}
