@@ -1,0 +1,11 @@
+---
+- name: Create user with a home directory
+  hosts: all
+  become: true
+  tasks:
+    - name: Make it
+      ansible.builtin.user:
+        name: by_ans
+        home: /home/by_ans
+        state: present
+        create_home: yes

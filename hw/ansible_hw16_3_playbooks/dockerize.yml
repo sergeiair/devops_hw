@@ -1,0 +1,57 @@
+---
+- name: Install Docker and add user
+  hosts: main
+  become: true
+  tasks:
+    - name: Update package index
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Ensure curl is installed
+      ansible.builtin.apt:
+        name: curl
+        state: present
+
+    - name: Ensure gpg is installed
+      ansible.builtin.apt:
+        name: gnupg
+        state: present
+
+    - name: Ensure /usr/share/keyrings directory exists
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG
+      ansible.builtin.shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-arch>
+      args:
+        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: Set up the Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ an>
+        state: present
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Add user to the docker group
+      ansible.builtin.user:
+        name: by_ans
+        groups: docker
+        append: yes
