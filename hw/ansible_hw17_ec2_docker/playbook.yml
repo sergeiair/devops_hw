@@ -1,0 +1,111 @@
+---
+- name: Run EC2 & Docker container
+  hosts: localhost
+  become: true
+
+  vars:
+    instance_name: "sergeis_t3_by_ans_17"
+    aws_region: "us-east-1"
+    ami_id: "ami-0e2c8caa4b6378d8c"
+    instance_type: "t3.micro"
+    key_name: "devops"
+    security_group: "launch-wizard-1"
+
+  tasks:
+    - name: Create EC2 instance
+      amazon.aws.ec2_instance:
+        name: "{{ instance_name }}"
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_type }}"
+        key_name: "{{ key_name }}"
+        security_groups: [ "{{ security_group }}" ]
+        image_id: "{{ ami_id }}"
+        network_interfaces:
+          - assign_public_ip: true
+        tags:
+          Name: "sergeis_t3_by_ans_17"
+        wait: true
+      register: ec2_instance
+
+    - name: EC2 creation output
+      debug:
+        var: ec2_instance
+
+    - name: Debug EC2 instance output
+      debug:
+        msg: "EC2 instance output: {{ ec2_instance }}"
+
+    - name: Set dynamic inventory
+      add_host:
+        name: "{{ ec2_instance.instances[0].network_interfaces[0].association.public_ip }}"
+        ansible_user: ubuntu
+        ansible_ssh_private_key_file: "/root/ansible-hw-17/devops.pem"
+
+    - name: Pause for 20 seconds
+      pause:
+        seconds: 20
+
+- name: Install Docker and add user
+  hosts: all
+  become: true
+  tasks:
+    - name: Update package index
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Ensure curl is installed
+      ansible.builtin.apt:
+        name: curl
+        state: present
+
+    - name: Ensure gpg is installed
+      ansible.builtin.apt:
+        name: gnupg
+        state: present
+
+    - name: Ensure /usr/share/keyrings directory exists
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: Set up the Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable"
+        state: present
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Run Nginx container
+      docker_container:
+        name: nginx-container
+        image: nginx
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "80:80"
+
+    - name: Verify Nginx container is running
+      docker_container:
+        name: nginx-container
+        state: started
