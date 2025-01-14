@@ -1,0 +1,50 @@
+---
+- name: Reboot and deploy role
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Reboot the remote server
+      ansible.builtin.reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      register: reboot_result
+      ignore_errors: false
+
+    - name: Debug EC2 instance output
+      debug:
+        msg: "EC2 instance output: {{ reboot_result }}"
+
+    - name: Wait for the server to come back up
+      ansible.builtin.wait_for:
+        host: main
+        port: 22
+        delay: 30
+        state: started
+        timeout: 120
+        search_regex: ubuntu
+      when: reboot_result is defined and reboot_result is not failed
+      register: wait_result
+      ignore_errors: yes
+
+    - name: Debug EC2 instance output
+      debug:
+        var: wait_result
+
+    - name: Include the variables from vars.yml
+      include_vars:
+        file: vars.yml
+
+    - name: Deploy the Tomcat role after reboot
+      include_role:
+        name: "{{ tomcat_role }}"
+      vars:
+        uid: "{{ tomcat_vars.uid }}"
+        gid: "{{ tomcat_vars.gid }}"
+        install_java: "{{ tomcat_vars.install_java }}"
+        tomcat_version: "{{ tomcat_vars.tomcat_version }}"
+        tomcat_home: "{{ tomcat_vars.tomcat_home }}"
+        java_options: "{{ tomcat_vars.java_options }}"
+        catalina_options: "{{ tomcat_vars.catalina_options }}"
+      when: reboot_result is defined and reboot_result is not failed

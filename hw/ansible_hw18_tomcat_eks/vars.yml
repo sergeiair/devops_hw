@@ -1,0 +1,10 @@
+tomcat_role: noobient.tomcat  # Define the role name as a variable
+
+tomcat_vars:
+  uid: 1234
+  gid: 1234
+  install_java: false
+  tomcat_version: 10.0.27
+  tomcat_home: /opt/apache-tomcat
+  java_options: -Djava.net.preferIPv4Stack=false
+  catalina_options: -Xms1G -Xmx8G
