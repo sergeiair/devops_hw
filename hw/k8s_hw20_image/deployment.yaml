@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-web-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: java-web-server
+  template:
+    metadata:
+      labels:
+        app: java-web-server
+    spec:
+      containers:
+        - name: java-web-server
+          image: sergeizh/java-web-server:latest
+
+          ports:
+            - containerPort: 8080
